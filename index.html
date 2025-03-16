@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>全年年历</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            margin: 0;
+        }
+
+        #year-sidebar {
+            width: 150px;
+            padding: 20px;
+            border-right: 1px solid #ccc;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #year-sidebar h2 {
+            margin-bottom: 10px;
+        }
+
+        #year-input {
+            margin-bottom: 10px;
+            font-size: 22px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.1);
+            width: 146px;
+            height: 35px;
+        }
+
+        #year-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+            height: 80vh;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        #year-list li {
+            padding: 6px; /* 缩小 item 的高度 */
+            cursor: pointer;
+            text-align: center;
+            border-bottom: 1px solid #ccc;
+        }
+
+        #year-list li:last-child {
+            border-bottom: none;
+        }
+
+        #year-list li:hover {
+            background-color: #f0f0f0;
+        }
+
+        #calendar-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 4px 10px;
+        }
+
+        .month {
+            border: 1px solid #ccc;
+            padding: 8px 8px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .month h2 {
+            margin: 0;
+            margin-bottom: 6px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 7px 7px 5px 5px;
+            text-align: center;
+            width: calc(100% / 7);
+            box-sizing: border-box;
+            font-size: 14px;
+            position: relative;
+            vertical-align: bottom;
+        }
+
+        .holiday {
+            background-color: #ffe5e5;
+            color: #cc0000;
+        }
+
+        .solar-term {
+            background-color: #e5f6ff;
+            color: #006400;
+        }
+
+        .special-day-name {
+            position: absolute;
+            top: -1px;
+            right: 0px;
+            font-size: 9px;
+        }
+
+        @media print {
+            body > *:not(#calendar-container) {
+                display: none;
+            }
+
+            @page {
+                size: A4 landscape;
+                margin: 5mm;
+            }
+
+            .holiday {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background-color: #ffe5e5 !important;
+                color: #cc0000 !important;
+            }
+
+            .solar-term {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                background-color: #e5f6ff !important;
+                color: #006400 !important;
+            }
+        }
+    </style>
+    <script src="https://unpkg.com/lunisolar@2.1.0/dist/lunisolar.js"></script>
+</head>
+
+<body>
+    <div id="year-sidebar">
+        <h2>年份选择</h2>
+        <input type="number" id="year-input" value="2024" min="1901" max="2100" oninput="generateCalendarFromInput()">
+        <ul id="year-list">
+            <!-- 动态生成年份列表 -->
+        </ul>
+    </div>
+    <div id="calendar-container"></div>
+    <script>
+        const holidays = {
+            1: { 1: "元旦" },
+            4: { 5: "清明节" },
+            5: { 1: "劳动节" },
+            9: { 15: "中秋节" },
+            10: { 1: "国庆节" }
+        };
+
+        const traditionalToSimplified = {
+            "小寒": "小寒",
+            "大寒": "大寒",
+            "立春": "立春",
+            "雨水": "雨水",
+            "驚蟄": "惊蛰",
+            "春分": "春分",
+            "清明": "清明",
+            "穀雨": "谷雨",
+            "立夏": "立夏",
+            "小滿": "小满",
+            "芒種": "芒种",
+            "夏至": "夏至",
+            "小暑": "小暑",
+            "大暑": "大暑",
+            "立秋": "立秋",
+            "處暑": "处暑",
+            "白露": "白露",
+            "秋分": "秋分",
+            "寒露": "寒露",
+            "霜降": "霜降",
+            "立冬": "立冬",
+            "小雪": "小雪",
+            "大雪": "大雪",
+            "冬至": "冬至"
+        };
+
+        function getSolarTermDate(year, termIndex) {
+            const termList = lunisolar.SolarTerm.getYearTermDayList(year);
+            const month = Math.floor(termIndex / 2) + 1;
+            const day = termList[termIndex];
+            return { month, day };
+        }
+
+        function generateCalendar(year) {
+            const calendarContainer = document.getElementById('calendar-container');
+            calendarContainer.innerHTML = '';
+
+            const solarTermDates = {};
+            for (let i = 0; i < 24; i++) {
+                const { month, day } = getSolarTermDate(year, i);
+                if (!solarTermDates[month]) {
+                    solarTermDates[month] = {};
+                }
+                const originalTermName = lunisolar.SolarTerm.getNames()[i];
+                const simplifiedTermName = traditionalToSimplified[originalTermName];
+                solarTermDates[month][day] = simplifiedTermName;
+            }
+
+            for (let month = 1; month <= 12; month++) {
+                const monthDiv = document.createElement('div');
+                monthDiv.classList.add('month');
+
+                const monthTitle = document.createElement('h2');
+                monthTitle.textContent = `${year}年 ${month}月`;
+                monthDiv.appendChild(monthTitle);
+
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const days = ['日', '一', '二', '三', '四', '五', '六'];
+                days.forEach(day => {
+                    const th = document.createElement('th');
+                    th.textContent = day;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                const firstDay = new Date(year, month - 1, 1).getDay();
+                const lastDay = new Date(year, month, 0).getDate();
+                let date = 1;
+
+                for (let i = 0; i < 6; i++) {
+                    const row = document.createElement('tr');
+                    for (let j = 0; j < 7; j++) {
+                        const cell = document.createElement('td');
+                        if ((i === 0 && j < firstDay) || date > lastDay) {
+                            cell.textContent = '';
+                        } else {
+                            let isSpecialDay = false;
+                            cell.textContent = date;
+                            if (holidays[month] && holidays[month][date]) {
+                                cell.classList.add('holiday');
+                                const nameSpan = document.createElement('span');
+                                nameSpan.classList.add('special-day-name');
+                                nameSpan.textContent = holidays[month][date];
+                                cell.appendChild(nameSpan);
+                                isSpecialDay = true;
+                            }
+                            if (solarTermDates[month] && solarTermDates[month][date]) {
+                                cell.classList.add('solar-term');
+                                const nameSpan = document.createElement('span');
+                                nameSpan.classList.add('special-day-name');
+                                nameSpan.textContent = solarTermDates[month][date];
+                                cell.appendChild(nameSpan);
+                                isSpecialDay = true;
+                            }
+                            date++;
+                        }
+                        row.appendChild(cell);
+                    }
+                    tbody.appendChild(row);
+                    if (date > lastDay) {
+                        break;
+                    }
+                }
+                table.appendChild(tbody);
+                monthDiv.appendChild(table);
+                calendarContainer.appendChild(monthDiv);
+            }
+        }
+
+        function generateCalendarFromInput() {
+            const year = parseInt(document.getElementById('year-input').value);
+            if (!isNaN(year) && year >= 1901 && year <= 2100) {
+                generateCalendar(year);
+            }
+        }
+
+        function generateYearList() {
+            const yearList = document.getElementById('year-list');
+            for (let year = 1901; year <= 2100; year++) {
+                const li = document.createElement('li');
+                li.textContent = year;
+                li.addEventListener('click', () => {
+                    generateCalendar(year);
+                    document.getElementById('year-input').value = year;
+                });
+                yearList.appendChild(li);
+
+                // 添加以下代码来定位到 2024 这一项
+                if (year === 2024) {
+                    const targetLi = li;
+                    const parent = targetLi.parentElement;
+                    const offsetTop = targetLi.offsetTop;
+                    const scrollTop = parent.scrollTop;
+                    if (offsetTop < scrollTop) {
+                        parent.scrollTop = offsetTop;
+                    } else if (offsetTop + targetLi.offsetHeight > scrollTop + parent.offsetHeight) {
+                        parent.scrollTop = offsetTop + targetLi.offsetHeight - parent.offsetHeight;
+                    }
+                }
+            }
+        }
+
+        window.onload = function () {
+            generateYearList();
+            generateCalendar(2024);
+            setInputSize();
+        };
+    </script>
+</body>
+
+</html>
