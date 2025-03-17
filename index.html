@@ -143,6 +143,12 @@
                 background-color: #e5f6ff !important;
                 color: #006400 !important;
             }
+
+            /* 增加以下样式确保边框在打印时正常显示 */
+            th,
+            td {
+                border: 1px solid #ccc !important;
+            }
         }
     </style>
     <script src="https://unpkg.com/lunisolar@2.1.0/dist/lunisolar.js"></script>
@@ -163,7 +169,7 @@
             3: { 12: "植树节" },
             5: { 1: "劳动节" },
             6: { 1: "儿童节" },
-            7: { 1: "建党节", 7: "七夕节" },
+            7: { 1: "建党节" },
             8: { 1: "建军节" },
             9: { 10: "教师节" },
             10: { 1: "国庆节" }
