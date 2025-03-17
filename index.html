@@ -48,7 +48,8 @@
         }
 
         #year-list li {
-            padding: 6px; /* 缩小 item 的高度 */
+            padding: 6px;
+            /* 缩小 item 的高度 */
             cursor: pointer;
             text-align: center;
             border-bottom: 1px solid #ccc;
@@ -120,7 +121,7 @@
         }
 
         @media print {
-            body > *:not(#calendar-container) {
+            body>*:not(#calendar-container) {
                 display: none;
             }
 
@@ -159,10 +160,22 @@
     <script>
         const holidays = {
             1: { 1: "元旦" },
-            4: { 5: "清明节" },
+            3: { 12: "植树节" },
             5: { 1: "劳动节" },
-            9: { 15: "中秋节" },
+            6: { 1: "儿童节" },
+            7: { 1: "建党节", 7: "七夕节" },
+            8: { 1: "建军节" },
+            9: { 10: "教师节" },
             10: { 1: "国庆节" }
+        };
+
+        const lunarHolidays = {
+            1: { 1: "春节", 15: "元宵节" },
+            5: { 5: "端午节" },
+            7: { 7: "七夕节" },
+            8: { 15: "中秋节" },
+            9: { 9: "重阳节" },
+            12: { 8: "腊八节", 30: "除夕" }
         };
 
         const traditionalToSimplified = {
@@ -264,6 +277,23 @@
                                 cell.appendChild(nameSpan);
                                 isSpecialDay = true;
                             }
+
+                            // 计算并显示阴历日期
+                            const solarDate = new Date(year, month - 1, date);
+                            const lunar = lunisolar(solarDate);
+                            const lunarMonth = lunar.lunar.month;
+                            const lunarDay = lunar.lunar.day;
+
+                            // 检查是否为阴历节日
+                            if (lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
+                                cell.classList.add('holiday');
+                                const lunarHolidaySpan = document.createElement('span');
+                                lunarHolidaySpan.classList.add('special-day-name');
+                                lunarHolidaySpan.textContent = lunarHolidays[lunarMonth][lunarDay];
+                                cell.appendChild(lunarHolidaySpan);
+                                isSpecialDay = true;
+                            }
+
                             date++;
                         }
                         row.appendChild(cell);
@@ -315,7 +345,8 @@
         window.onload = function () {
             generateYearList();
             generateCalendar(2024);
-            setInputSize();
+            // 这里 setInputSize 函数未定义，若需要可添加相应实现
+            // setInputSize();
         };
     </script>
 </body>
