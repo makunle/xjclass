@@ -45,11 +45,11 @@
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
             width: 100%;
+            margin-bottom: 10px;
         }
 
         #year-list li {
             padding: 6px;
-            /* 缩小 item 的高度 */
             cursor: pointer;
             text-align: center;
             border-bottom: 1px solid #ccc;
@@ -63,9 +63,23 @@
             background-color: #f0f0f0;
         }
 
-        /* 新增高亮样式 */
         #year-list li.selected {
             background-color: #d0eaff;
+        }
+
+        #toggle-button {
+            padding: 8px 12px;
+            font-size: 14px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #toggle-button:hover {
+            background-color: #0056b3;
         }
 
         #calendar-container {
@@ -125,7 +139,6 @@
             font-size: 9px;
         }
 
-        /* 新增样式，用于右下角显示第二个名字 */
         .second-name {
             position: absolute;
             bottom: -2px;
@@ -157,7 +170,6 @@
                 color: #006400 !important;
             }
 
-            /* 增加以下样式确保边框在打印时正常显示 */
             th,
             td {
                 border: 1px solid #ccc !important;
@@ -174,6 +186,7 @@
         <ul id="year-list">
             <!-- 动态生成年份列表 -->
         </ul>
+        <button id="toggle-button">隐藏节日和节气</button>
     </div>
     <div id="calendar-container"></div>
     <script>
@@ -223,6 +236,8 @@
             "大雪": "大雪",
             "冬至": "冬至"
         };
+
+        let showHolidaysAndSolarTerms = true;
 
         function getSolarTermDate(year, termIndex) {
             const termList = lunisolar.SolarTerm.getYearTermDayList(year);
@@ -286,26 +301,24 @@
                             cell.textContent = date;
                             const specialNames = [];
 
-                            if (holidays[month] && holidays[month][date]) {
+                            if (year >= 1950 && showHolidaysAndSolarTerms && holidays[month] && holidays[month][date]) {
                                 specialNames.push(holidays[month][date]);
                                 cell.classList.add('holiday');
                                 isSpecialDay = true;
                             }
-                            if (showSolarTermsAndLunarHolidays && solarTermDates[month] && solarTermDates[month][date]) {
+                            if (showHolidaysAndSolarTerms && showSolarTermsAndLunarHolidays && solarTermDates[month] && solarTermDates[month][date]) {
                                 specialNames.push(solarTermDates[month][date]);
                                 cell.classList.add('solar-term');
                                 isSpecialDay = true;
                             }
 
-                            // 计算并显示阴历日期
                             if (year > 1901 && year <= 2100) {
                                 const solarDate = new Date(year, month - 1, date);
                                 const lunar = lunisolar(solarDate);
                                 const lunarMonth = lunar.lunar.month;
                                 const lunarDay = lunar.lunar.day;
 
-                                // 检查是否为阴历节日
-                                if (showSolarTermsAndLunarHolidays && lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
+                                if (showHolidaysAndSolarTerms && showSolarTermsAndLunarHolidays && lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
                                     specialNames.push(lunarHolidays[lunarMonth][lunarDay]);
                                     cell.classList.add('holiday');
                                     isSpecialDay = true;
@@ -345,20 +358,16 @@
             const year = parseInt(document.getElementById('year-input').value);
             if (!isNaN(year) && year >= 1900 && year <= 2500) {
                 generateCalendar(year);
-                // 定位到输入的年份并高亮显示
                 const yearList = document.getElementById('year-list');
                 const lis = yearList.getElementsByTagName('li');
                 for (let i = 0; i < lis.length; i++) {
                     const li = lis[i];
                     if (parseInt(li.textContent) === year) {
-                        // 移除所有高亮样式
                         const selectedLi = yearList.querySelector('.selected');
                         if (selectedLi) {
                             selectedLi.classList.remove('selected');
                         }
-                        // 添加高亮样式
                         li.classList.add('selected');
-                        // 滚动到该年份
                         li.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         break;
                     }
@@ -374,17 +383,14 @@
                 li.addEventListener('click', () => {
                     generateCalendar(year);
                     document.getElementById('year-input').value = year;
-                    // 移除所有高亮样式
                     const selectedLi = yearList.querySelector('.selected');
                     if (selectedLi) {
                         selectedLi.classList.remove('selected');
                     }
-                    // 添加高亮样式
                     li.classList.add('selected');
                 });
                 yearList.appendChild(li);
 
-                // 初始高亮显示 2025 年
                 if (year === 2025) {
                     li.classList.add('selected');
                     li.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -392,11 +398,19 @@
             }
         }
 
+        function toggleHolidaysAndSolarTerms() {
+            showHolidaysAndSolarTerms = !showHolidaysAndSolarTerms;
+            const button = document.getElementById('toggle-button');
+            button.textContent = showHolidaysAndSolarTerms ? '隐藏节日和节气' : '显示节日和节气';
+            const year = parseInt(document.getElementById('year-input').value);
+            generateCalendar(year);
+        }
+
         window.onload = function () {
             generateYearList();
             generateCalendar(2025);
-            // 这里 setInputSize 函数未定义，若需要可添加相应实现
-            // setInputSize();
+            const toggleButton = document.getElementById('toggle-button');
+            toggleButton.addEventListener('click', toggleHolidaysAndSolarTerms);
         };
     </script>
 </body>
