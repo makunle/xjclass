@@ -63,6 +63,11 @@
             background-color: #f0f0f0;
         }
 
+        /* 新增高亮样式 */
+        #year-list li.selected {
+            background-color: #d0eaff;
+        }
+
         #calendar-container {
             flex: 1;
             display: grid;
@@ -157,7 +162,7 @@
 <body>
     <div id="year-sidebar">
         <h2>年份选择</h2>
-        <input type="number" id="year-input" value="2024" min="1900" max="2500" oninput="generateCalendarFromInput()">
+        <input type="number" id="year-input" value="2025" min="1900" max="2500" oninput="generateCalendarFromInput()">
         <ul id="year-list">
             <!-- 动态生成年份列表 -->
         </ul>
@@ -325,6 +330,24 @@
             const year = parseInt(document.getElementById('year-input').value);
             if (!isNaN(year) && year >= 1900 && year <= 2500) {
                 generateCalendar(year);
+                // 定位到输入的年份并高亮显示
+                const yearList = document.getElementById('year-list');
+                const lis = yearList.getElementsByTagName('li');
+                for (let i = 0; i < lis.length; i++) {
+                    const li = lis[i];
+                    if (parseInt(li.textContent) === year) {
+                        // 移除所有高亮样式
+                        const selectedLi = yearList.querySelector('.selected');
+                        if (selectedLi) {
+                            selectedLi.classList.remove('selected');
+                        }
+                        // 添加高亮样式
+                        li.classList.add('selected');
+                        // 滚动到该年份
+                        li.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        break;
+                    }
+                }
             }
         }
 
@@ -336,27 +359,27 @@
                 li.addEventListener('click', () => {
                     generateCalendar(year);
                     document.getElementById('year-input').value = year;
+                    // 移除所有高亮样式
+                    const selectedLi = yearList.querySelector('.selected');
+                    if (selectedLi) {
+                        selectedLi.classList.remove('selected');
+                    }
+                    // 添加高亮样式
+                    li.classList.add('selected');
                 });
                 yearList.appendChild(li);
 
-                // 添加以下代码来定位到 2024 这一项
-                if (year === 2024) {
-                    const targetLi = li;
-                    const parent = targetLi.parentElement;
-                    const offsetTop = targetLi.offsetTop;
-                    const scrollTop = parent.scrollTop;
-                    if (offsetTop < scrollTop) {
-                        parent.scrollTop = offsetTop;
-                    } else if (offsetTop + targetLi.offsetHeight > scrollTop + parent.offsetHeight) {
-                        parent.scrollTop = offsetTop + targetLi.offsetHeight - parent.offsetHeight;
-                    }
+                // 初始高亮显示 2025 年
+                if (year === 2025) {
+                    li.classList.add('selected');
+                    li.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             }
         }
 
         window.onload = function () {
             generateYearList();
-            generateCalendar(2024);
+            generateCalendar(2025);
             // 这里 setInputSize 函数未定义，若需要可添加相应实现
             // setInputSize();
         };
