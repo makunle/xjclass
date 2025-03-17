@@ -157,7 +157,7 @@
 <body>
     <div id="year-sidebar">
         <h2>年份选择</h2>
-        <input type="number" id="year-input" value="2024" min="1901" max="2100" oninput="generateCalendarFromInput()">
+        <input type="number" id="year-input" value="2024" min="1900" max="2500" oninput="generateCalendarFromInput()">
         <ul id="year-list">
             <!-- 动态生成年份列表 -->
         </ul>
@@ -222,15 +222,19 @@
             const calendarContainer = document.getElementById('calendar-container');
             calendarContainer.innerHTML = '';
 
+            const showSolarTermsAndLunarHolidays = year >= 1902 && year <= 2100;
+
             const solarTermDates = {};
-            for (let i = 0; i < 24; i++) {
-                const { month, day } = getSolarTermDate(year, i);
-                if (!solarTermDates[month]) {
-                    solarTermDates[month] = {};
+            if (showSolarTermsAndLunarHolidays) {
+                for (let i = 0; i < 24; i++) {
+                    const { month, day } = getSolarTermDate(year, i);
+                    if (!solarTermDates[month]) {
+                        solarTermDates[month] = {};
+                    }
+                    const originalTermName = lunisolar.SolarTerm.getNames()[i];
+                    const simplifiedTermName = traditionalToSimplified[originalTermName];
+                    solarTermDates[month][day] = simplifiedTermName;
                 }
-                const originalTermName = lunisolar.SolarTerm.getNames()[i];
-                const simplifiedTermName = traditionalToSimplified[originalTermName];
-                solarTermDates[month][day] = simplifiedTermName;
             }
 
             for (let month = 1; month <= 12; month++) {
@@ -275,7 +279,7 @@
                                 cell.appendChild(nameSpan);
                                 isSpecialDay = true;
                             }
-                            if (solarTermDates[month] && solarTermDates[month][date]) {
+                            if (showSolarTermsAndLunarHolidays && solarTermDates[month] && solarTermDates[month][date]) {
                                 cell.classList.add('solar-term');
                                 const nameSpan = document.createElement('span');
                                 nameSpan.classList.add('special-day-name');
@@ -285,19 +289,21 @@
                             }
 
                             // 计算并显示阴历日期
-                            const solarDate = new Date(year, month - 1, date);
-                            const lunar = lunisolar(solarDate);
-                            const lunarMonth = lunar.lunar.month;
-                            const lunarDay = lunar.lunar.day;
+                            if (year > 1901 && year <= 2100) {
+                                const solarDate = new Date(year, month - 1, date);
+                                const lunar = lunisolar(solarDate);
+                                const lunarMonth = lunar.lunar.month;
+                                const lunarDay = lunar.lunar.day;
 
-                            // 检查是否为阴历节日
-                            if (lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
-                                cell.classList.add('holiday');
-                                const lunarHolidaySpan = document.createElement('span');
-                                lunarHolidaySpan.classList.add('special-day-name');
-                                lunarHolidaySpan.textContent = lunarHolidays[lunarMonth][lunarDay];
-                                cell.appendChild(lunarHolidaySpan);
-                                isSpecialDay = true;
+                                // 检查是否为阴历节日
+                                if (showSolarTermsAndLunarHolidays && lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
+                                    cell.classList.add('holiday');
+                                    const lunarHolidaySpan = document.createElement('span');
+                                    lunarHolidaySpan.classList.add('special-day-name');
+                                    lunarHolidaySpan.textContent = lunarHolidays[lunarMonth][lunarDay];
+                                    cell.appendChild(lunarHolidaySpan);
+                                    isSpecialDay = true;
+                                }
                             }
 
                             date++;
@@ -317,14 +323,14 @@
 
         function generateCalendarFromInput() {
             const year = parseInt(document.getElementById('year-input').value);
-            if (!isNaN(year) && year >= 1901 && year <= 2100) {
+            if (!isNaN(year) && year >= 1900 && year <= 2500) {
                 generateCalendar(year);
             }
         }
 
         function generateYearList() {
             const yearList = document.getElementById('year-list');
-            for (let year = 1901; year <= 2100; year++) {
+            for (let year = 1900; year <= 2500; year++) {
                 const li = document.createElement('li');
                 li.textContent = year;
                 li.addEventListener('click', () => {
