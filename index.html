@@ -120,8 +120,16 @@
 
         .special-day-name {
             position: absolute;
-            top: -1px;
+            top: -2px;
             right: 0px;
+            font-size: 9px;
+        }
+
+        /* 新增样式，用于右下角显示第二个名字 */
+        .second-name {
+            position: absolute;
+            bottom: -2px;
+            right: 0;
             font-size: 9px;
         }
 
@@ -276,20 +284,16 @@
                         } else {
                             let isSpecialDay = false;
                             cell.textContent = date;
+                            const specialNames = [];
+
                             if (holidays[month] && holidays[month][date]) {
+                                specialNames.push(holidays[month][date]);
                                 cell.classList.add('holiday');
-                                const nameSpan = document.createElement('span');
-                                nameSpan.classList.add('special-day-name');
-                                nameSpan.textContent = holidays[month][date];
-                                cell.appendChild(nameSpan);
                                 isSpecialDay = true;
                             }
                             if (showSolarTermsAndLunarHolidays && solarTermDates[month] && solarTermDates[month][date]) {
+                                specialNames.push(solarTermDates[month][date]);
                                 cell.classList.add('solar-term');
-                                const nameSpan = document.createElement('span');
-                                nameSpan.classList.add('special-day-name');
-                                nameSpan.textContent = solarTermDates[month][date];
-                                cell.appendChild(nameSpan);
                                 isSpecialDay = true;
                             }
 
@@ -302,12 +306,23 @@
 
                                 // 检查是否为阴历节日
                                 if (showSolarTermsAndLunarHolidays && lunarHolidays[lunarMonth] && lunarHolidays[lunarMonth][lunarDay]) {
+                                    specialNames.push(lunarHolidays[lunarMonth][lunarDay]);
                                     cell.classList.add('holiday');
-                                    const lunarHolidaySpan = document.createElement('span');
-                                    lunarHolidaySpan.classList.add('special-day-name');
-                                    lunarHolidaySpan.textContent = lunarHolidays[lunarMonth][lunarDay];
-                                    cell.appendChild(lunarHolidaySpan);
                                     isSpecialDay = true;
+                                }
+                            }
+
+                            if (specialNames.length > 0) {
+                                const nameSpan = document.createElement('span');
+                                nameSpan.classList.add('special-day-name');
+                                nameSpan.textContent = specialNames[0];
+                                cell.appendChild(nameSpan);
+
+                                if (specialNames.length > 1) {
+                                    const secondNameSpan = document.createElement('span');
+                                    secondNameSpan.classList.add('second-name');
+                                    secondNameSpan.textContent = specialNames[1];
+                                    cell.appendChild(secondNameSpan);
                                 }
                             }
 
