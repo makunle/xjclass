@@ -411,6 +411,12 @@
             generateCalendar(2025);
             const toggleButton = document.getElementById('toggle-button');
             toggleButton.addEventListener('click', toggleHolidaysAndSolarTerms);
+
+            // 添加打印事件监听器
+            window.addEventListener('beforeprint', function () {
+                const year = parseInt(document.getElementById('year-input').value);
+                document.title = year + '年日历';
+            });
         };
     </script>
 </body>
